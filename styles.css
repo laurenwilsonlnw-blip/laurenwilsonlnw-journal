@@ -154,13 +154,11 @@ h1:focus {
   padding-bottom: 36px;
 }
 .polaroid {
-  background: var(--white);
-  padding: 14px 14px 56px;
-  box-shadow: 0 14px 28px -12px rgba(23, 50, 92, 0.45);
   transform: rotate(3deg);
   position: relative;
   max-width: 340px;
   margin: auto;
+  perspective: 1200px;
 }
 .polaroid::before,
 .card::before {
@@ -183,7 +181,7 @@ h1:focus {
   text-align: center;
   padding: 10px;
 }
-.polaroid p {
+.front p {
   position: absolute;
   bottom: 14px;
   left: 0;
@@ -538,5 +536,98 @@ footer a {
   .card,
   .connect {
     transform: none;
+  }
+}
+
+/* polaroid flip + tape peel */
+.flipper {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+.polaroid.flipped .flipper {
+  transform: rotateY(180deg);
+}
+.face {
+  background: var(--white);
+  padding: 14px 14px 56px;
+  box-shadow: 0 14px 28px -12px rgba(23, 50, 92, 0.45);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.front {
+  position: relative;
+}
+.back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 36px 28px;
+}
+.back p {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.2;
+}
+.polaroid.live::before {
+  display: none;
+}
+.tape {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  width: 110px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  background: rgba(255, 227, 110, 0.88);
+  transform: translateX(-50%) rotate(-4deg);
+  transform-origin: 0 50%;
+  transition: transform 0.32s ease-out, opacity 0.32s;
+  z-index: 2;
+}
+.tape::after {
+  content: "";
+  position: absolute;
+  inset: -10px -6px;
+}
+.tape:hover {
+  background: rgba(255, 215, 60, 0.95);
+}
+.polaroid.peeling .tape {
+  transform: translateX(-50%) rotate(-38deg) translateY(-6px);
+}
+.hint {
+  position: absolute;
+  top: -46px;
+  right: 6px;
+  font-size: 24px;
+  line-height: 1;
+  transform: rotate(5deg);
+  color: var(--soft);
+  pointer-events: none;
+  z-index: 2;
+}
+.hint::after {
+  content: "\2199";
+  display: inline-block;
+  margin-left: 4px;
+  font-family: system-ui, sans-serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flipper,
+  .tape {
+    transition: none;
+  }
+}
+@media print {
+  .tape,
+  .hint {
+    display: none;
   }
 }
