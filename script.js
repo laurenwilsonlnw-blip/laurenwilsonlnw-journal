@@ -174,24 +174,39 @@
     }
 
     /*
-      The current spread stays completely still underneath the turning page.
-      Only the LEFT page rolls over. This prevents the right image from
-      changing or flashing during the animation.
+      A real book/binder turn has opposite directions:
 
-      When the turn finishes, the underlying spread is switched in one step:
-      desktop: current pair -> next pair
-      mobile: current image -> next image
+      NEXT: the RIGHT page is attached at the spine and turns LEFT.
+      PREV: the LEFT page is attached at the spine and turns RIGHT.
+
+      Keep the current spread underneath the animation. Only after the
+      physical page has completed its turn do we swap in the next spread.
     */
     var oldLeft = isMobile()
       ? mobileImageItem(current)
       : imageItem(current);
 
+    var oldRight = isMobile()
+      ? null
+      : imageItem(current + 1);
+
     var newLeft = isMobile()
       ? mobileImageItem(nextCurrent)
       : imageItem(nextCurrent);
 
-    setFlipPage(oldLeft, newLeft);
-    flipSheet.className = 'flip-sheet';
+    var newRight = isMobile()
+      ? null
+      : imageItem(nextCurrent + 1);
+
+    if (direction > 0) {
+      // Right page turns left: old right on the front, new left on the back.
+      setFlipPage(oldRight || oldLeft, newLeft);
+      flipSheet.className = 'flip-sheet flip-next';
+    } else {
+      // Left page turns right: old left on the front, new right on the back.
+      setFlipPage(oldLeft, newRight || newLeft);
+      flipSheet.className = 'flip-sheet flip-prev';
+    }
 
     void flipSheet.offsetWidth;
     busy = true;
@@ -206,11 +221,9 @@
     if (reduceMotion.matches) {
       finish();
     } else {
-      flipSheet.classList.add('flip-next');
       window.setTimeout(finish, 920);
     }
   }
-
   function openModal(item) {
     if (!item) return;
     lastFocused = document.activeElement;
