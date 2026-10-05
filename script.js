@@ -158,31 +158,50 @@
   function move(direction) {
     if (busy || !images.length) return;
 
-    var oldCurrent = current;
     var step = isMobile() ? 1 : 2;
     var nextCurrent;
 
     if (isMobile()) {
       nextCurrent = mod(current + direction, images.length);
     } else {
-      nextCurrent = current + direction * step;
-      if (nextCurrent >= images.length) nextCurrent = 0;
+      nextCurrent = current + (direction * step);
+
+      if (nextCurrent >= images.length) {
+        nextCurrent = 0;
+      }
+
       if (nextCurrent < 0) {
-        nextCurrent = Math.max(0, images.length - 1 - ((images.length - 1) % 2));
+        nextCurrent = Math.max(0, images.length - (images.length % 2 === 0 ? 2 : 1));
       }
     }
 
-    /* Set up the sheet with the page that is physically being turned.
-       The new spread is rendered underneath it before the animation starts,
-       so the previous button changes the spread immediately and reliably. */
-    if (isMobile()) {
-      setFlipPage(mobileImageItem(oldCurrent), mobileImageItem(nextCurrent));
-      flipSheet.className = 'flip-sheet';
-    } else if (direction > 0) {
-      setFlipPage(imageItem(oldCurrent + 1), imageItem(nextCurrent));
+    /*
+      Keep the visible spread as the source of truth.
+      The flip sheet is only the physical page moving over that spread.
+      After the animation finishes, the spread is already showing the
+      correct next/previous pair and nothing gets changed again.
+    */
+    var oldLeft = isMobile()
+      ? mobileImageItem(current)
+      : imageItem(current);
+
+    var oldRight = isMobile()
+      ? null
+      : imageItem(current + 1);
+
+    var newLeft = isMobile()
+      ? mobileImageItem(nextCurrent)
+      : imageItem(nextCurrent);
+
+    var newRight = isMobile()
+      ? null
+      : imageItem(nextCurrent + 1);
+
+    if (direction > 0) {
+      setFlipPage(oldRight || oldLeft, newLeft);
       flipSheet.className = 'flip-sheet';
     } else {
-      setFlipPage(imageItem(oldCurrent), imageItem(nextCurrent + 1));
+      setFlipPage(oldLeft, newRight || newLeft);
       flipSheet.className = 'flip-sheet flip-prev';
     }
 
@@ -192,11 +211,7 @@
     void flipSheet.offsetWidth;
     busy = true;
 
-    if (direction > 0) {
-      flipSheet.classList.add('flip-next');
-    } else {
-      flipSheet.classList.add('flip-prev');
-    }
+    flipSheet.classList.add(direction > 0 ? 'flip-next' : 'flip-prev');
 
     function finish() {
       flipSheet.className = 'flip-sheet';
