@@ -112,6 +112,10 @@
     paintImage(leftImage, left);
     paintImage(rightImage, right);
 
+    // Store the exact image index currently displayed on each clickable page.
+    leftImageButton.dataset.imageIndex = String(current);
+    rightImageButton.dataset.imageIndex = String(isMobile() ? current : current + 1);
+
     leftLabel.textContent = left ? left.title : '';
     rightLabel.textContent = right ? right.title : '';
 
@@ -158,6 +162,15 @@
 
     var step = isMobile() ? 1 : 2;
     var nextCurrent;
+
+    /*
+      Desktop always starts on the left page of a two-image spread.
+      This also keeps navigation correct if the window is resized from
+      the one-image mobile layout to the desktop layout.
+    */
+    if (!isMobile() && current % 2 !== 0) {
+      current = current - 1;
+    }
 
     if (isMobile()) {
       nextCurrent = mod(current + direction, images.length);
@@ -245,11 +258,13 @@
   }
 
   document.getElementById('leftImageButton').addEventListener('click', function () {
-    openModal(mobileImageItem(current));
+    var index = Number(this.dataset.imageIndex);
+    openModal(images[index] || null);
   });
 
   document.getElementById('rightImageButton').addEventListener('click', function () {
-    openModal(isMobile() ? mobileImageItem(current) : imageItem(current + 1));
+    var index = Number(this.dataset.imageIndex);
+    openModal(images[index] || null);
   });
 
   modalClose.addEventListener('click', closeModal);
