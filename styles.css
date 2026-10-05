@@ -1299,3 +1299,107 @@ footer a {
     transform: none;
   }
 }
+
+
+/* Mobile binder: one full page at a time, with the same 3-D turn */
+@media (max-width: 620px) {
+  .binder-gallery {
+    margin-bottom: 58px;
+  }
+
+  .binder-stage {
+    grid-template-columns: 34px minmax(0, 1fr) 34px;
+    gap: 3px;
+  }
+
+  .binder {
+    width: 100%;
+    perspective: 1200px;
+  }
+
+  .binder-spread {
+    grid-template-columns: 1fr;
+    min-height: 500px;
+  }
+
+  .binder-right {
+    display: none;
+  }
+
+  .binder-spread::after {
+    display: none;
+  }
+
+  .binder-page,
+  .flip-face {
+    padding: 24px 18px 30px 44px;
+  }
+
+  .binder-page::before,
+  .flip-face::before {
+    left: 28px;
+  }
+
+  .photo-frame,
+  .flip-face .photo-frame {
+    height: min(72vw, 390px);
+    min-height: 250px;
+    padding: 9px;
+  }
+
+  .spiral {
+    left: 28px;
+    top: 12px;
+    bottom: 12px;
+    width: 26px;
+  }
+
+  .spiral span {
+    width: 26px;
+    height: 15px;
+    border-width: 3px;
+    border-left-width: 5px;
+  }
+
+  .flip-sheet {
+    left: 0;
+    width: 100%;
+    transform-origin: left center;
+  }
+
+  .flip-sheet.flip-prev {
+    left: 0;
+    width: 100%;
+    transform-origin: right center;
+  }
+
+  .flip-face {
+    width: 100%;
+  }
+
+  .gallery-arrow {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .gallery-controls {
+    margin-top: 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .gallery-hint {
+    font-size: 19px;
+  }
+}
+
+/* Keep the binder's 3-D faces intact on mobile Safari/WebKit. */
+.flip-sheet,
+.flip-face {
+  -webkit-transform-style: preserve-3d;
+}
+
+.flip-face {
+  -webkit-backface-visibility: hidden;
+}
