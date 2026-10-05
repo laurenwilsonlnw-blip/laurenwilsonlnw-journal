@@ -1460,3 +1460,48 @@ footer a {
     text-align: center;
   }
 }
+
+
+/* Final binder-turn behavior:
+   both Next and Previous use the same LEFT-page rollover.
+   The spread underneath stays unchanged until the animation finishes. */
+.flip-sheet {
+  left: 0;
+  width: 50%;
+  transform-origin: right center;
+}
+
+.flip-sheet.flip-prev {
+  left: 0;
+  width: 50%;
+  transform-origin: right center;
+}
+
+.flip-sheet.flip-next,
+.flip-sheet.flip-prev {
+  animation: binderFlipLeft .9s cubic-bezier(.18,.72,.2,1) forwards;
+}
+
+@keyframes binderFlipLeft {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(180deg);
+  }
+}
+
+/* Give the right photo the same lift/rollover treatment as the left photo. */
+.binder-right .image-button:hover .photo-frame {
+  transform: translateY(-3px) rotate(-1deg);
+  box-shadow: 0 18px 30px -13px rgba(23,50,92,.72);
+}
+
+@media (max-width: 620px) {
+  .flip-sheet,
+  .flip-sheet.flip-prev {
+    left: 0;
+    width: 100%;
+    transform-origin: right center;
+  }
+}
