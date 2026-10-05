@@ -38,28 +38,42 @@
           </h1>
           <p class="lede">Projects from computer science, web development, creative coding, and digital art.</p>
         </section>
-        <ul class="grid">
-          <li>
-            <article class="card">
-              <svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">
-                <rect width="400" height="240" fill="#17325c" />
-                <g fill="none" stroke-width="2.5">
-                  <circle cx="200" cy="120" r="108" stroke="#ffe36e" opacity=".35" />
-                  <circle cx="200" cy="120" r="82" stroke="#9fc2e8" />
-                  <circle cx="200" cy="120" r="56" stroke="#eaf0f4" />
-                  <circle cx="200" cy="120" r="30" stroke="#ff8a7a" />
-                </g>
-              </svg>
-              <div class="in">
-                <p class="cat">Creative coding, 2024</p>
-                <h3>Generative Sketches</h3>
-                <p>A series of code-driven visual pieces exploring pattern, color, and motion, developed through creative coding coursework.</p>
-                <ul class="pills" aria-label="Skills">
-                  <li>Creative Coding</li>
-                  <li>Python</li>
-                  <li>Digital Arts</li>
-                </ul>
+        <section class="notebook-gallery" aria-label="Portfolio image gallery">
+          <div class="notebook-stage">
+            <button class="gallery-arrow prev" type="button" aria-label="Previous image">&#8592;</button>
+
+            <div class="notebook" id="portfolioGallery">
+              <div class="spiral" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
               </div>
+
+              <div class="notebook-pages">
+                <div class="notebook-page page-left">
+                  <div class="photo-frame">
+                    <img id="galleryImage" src="img/portfolio-01.jpg" alt="Portfolio image 1">
+                  </div>
+                  <p class="page-label" id="galleryLabel">Portfolio image 1</p>
+                </div>
+                <div class="notebook-page page-right">
+                  <div class="page-lines" aria-hidden="true"></div>
+                  <p class="page-note" id="galleryNote">A closer look at Lauren's work.</p>
+                </div>
+              </div>
+
+              <div class="page-turn" aria-hidden="true">
+                <div class="page-turn-front"></div>
+                <div class="page-turn-back"></div>
+              </div>
+            </div>
+
+            <button class="gallery-arrow next" type="button" aria-label="Next image">&#8594;</button>
+          </div>
+
+          <div class="gallery-controls">
+            <div class="gallery-dots" id="galleryDots" role="tablist" aria-label="Choose portfolio image"></div>
+            <p class="gallery-hint">flip through the pages <span aria-hidden="true">↗</span></p>
+          </div>
+        </section>              </div>
             </article>
           </li>
           <li>
@@ -145,5 +159,6 @@
         <a href="mailto:laurenwilsonlnw@gmail.com">laurenwilsonlnw@gmail.com</a>
       </div>
     </footer>
+      <script src="script.js"></script>
   </body>
 </html>
