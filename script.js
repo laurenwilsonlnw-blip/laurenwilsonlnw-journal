@@ -97,12 +97,10 @@
   function paintImage(img, item) {
     if (!item) {
       img.removeAttribute('src');
-      img.removeAttribute('data-fallback-used');
       img.alt = '';
       return;
     }
 
-    img.removeAttribute('data-fallback-used');
     img.alt = item.alt || item.title;
     img.src = item.url;
   }
@@ -176,44 +174,31 @@
     }
 
     /*
-      Keep the visible spread as the source of truth.
-      The flip sheet is only the physical page moving over that spread.
-      After the animation finishes, the spread is already showing the
-      correct next/previous pair and nothing gets changed again.
+      The current spread stays completely still underneath the turning page.
+      Only the LEFT page rolls over. This prevents the right image from
+      changing or flashing during the animation.
+
+      When the turn finishes, the underlying spread is switched in one step:
+      desktop: current pair -> next pair
+      mobile: current image -> next image
     */
     var oldLeft = isMobile()
       ? mobileImageItem(current)
       : imageItem(current);
 
-    var oldRight = isMobile()
-      ? null
-      : imageItem(current + 1);
-
     var newLeft = isMobile()
       ? mobileImageItem(nextCurrent)
       : imageItem(nextCurrent);
 
-    var newRight = isMobile()
-      ? null
-      : imageItem(nextCurrent + 1);
-
-    if (direction > 0) {
-      setFlipPage(oldRight || oldLeft, newLeft);
-      flipSheet.className = 'flip-sheet';
-    } else {
-      setFlipPage(oldLeft, newRight || newLeft);
-      flipSheet.className = 'flip-sheet flip-prev';
-    }
-
-    current = nextCurrent;
-    renderSpread();
+    setFlipPage(oldLeft, newLeft);
+    flipSheet.className = 'flip-sheet';
 
     void flipSheet.offsetWidth;
     busy = true;
 
-    flipSheet.classList.add(direction > 0 ? 'flip-next' : 'flip-prev');
-
     function finish() {
+      current = nextCurrent;
+      renderSpread();
       flipSheet.className = 'flip-sheet';
       busy = false;
     }
@@ -221,6 +206,7 @@
     if (reduceMotion.matches) {
       finish();
     } else {
+      flipSheet.classList.add('flip-next');
       window.setTimeout(finish, 920);
     }
   }
@@ -296,11 +282,10 @@
       })
       .map(function (file) {
         return {
-          url: file.download_url,
+          url: 'https://raw.githubusercontent.com/laurenwilsonlnw-blip/laurenwilsonlnw-journal/main/img/' + encodeURIComponent(file.name),
           name: file.name,
           title: titleFromFile(file.name),
-          alt: titleFromFile(file.name),
-          fallbackUrl: 'https://cdn.jsdelivr.net/gh/laurenwilsonlnw-blip/laurenwilsonlnw-journal@main/img/' + encodeURIComponent(file.name)
+          alt: titleFromFile(file.name)
         };
       });
 
@@ -311,7 +296,24 @@
 
     current = 0;
     buildDots();
-    renderSpread();
+
+    /*
+      Preload every portfolio image before the binder is first painted.
+      This makes the initial spread reliable and prevents a page from
+      appearing blank while the browser is still fetching the image.
+    */
+    var preloadPromises = images.map(function (item) {
+      return new Promise(function (resolve) {
+        var preloader = new Image();
+        preloader.onload = resolve;
+        preloader.onerror = resolve;
+        preloader.src = item.url;
+      });
+    });
+
+    Promise.all(preloadPromises).then(function () {
+      renderSpread();
+    });
   }
 
   fetch('https://api.github.com/repos/laurenwilsonlnw-blip/laurenwilsonlnw-journal/contents/img')
@@ -335,20 +337,6 @@
 
   [leftImage, rightImage, flipFrontImage, flipBackImage].forEach(function (img) {
     img.addEventListener('error', function () {
-      var item = null;
-      for (var i = 0; i < images.length; i++) {
-        if (images[i].url === img.src || images[i].fallbackUrl === img.src) {
-          item = images[i];
-          break;
-        }
-      }
-
-      if (item && item.fallbackUrl && !img.hasAttribute('data-fallback-used')) {
-        img.setAttribute('data-fallback-used', 'true');
-        img.src = item.fallbackUrl;
-        return;
-      }
-
       img.alt = 'Portfolio image could not be loaded';
     });
   });
