@@ -164,9 +164,8 @@
     var nextCurrent;
 
     /*
-      Desktop always starts on the left page of a two-image spread.
-      This also keeps navigation correct if the window is resized from
-      the one-image mobile layout to the desktop layout.
+      Desktop navigation always moves by a complete two-image spread.
+      Mobile moves one image at a time.
     */
     if (!isMobile() && current % 2 !== 0) {
       current = current - 1;
@@ -187,13 +186,11 @@
     }
 
     /*
-      A real book/binder turn has opposite directions:
-
-      NEXT: the RIGHT page is attached at the spine and turns LEFT.
-      PREV: the LEFT page is attached at the spine and turns RIGHT.
-
-      Keep the current spread underneath the animation. Only after the
-      physical page has completed its turn do we swap in the next spread.
+      IMPORTANT:
+      Paint the destination spread FIRST, then put the old page on the
+      physical flip sheet. This means the new images are already underneath
+      the turning page when the animation begins, instead of appearing only
+      after the animation finishes.
     */
     var oldLeft = isMobile()
       ? mobileImageItem(current)
@@ -211,12 +208,16 @@
       ? null
       : imageItem(nextCurrent + 1);
 
+    // Switch the visible spread BEFORE starting the animation.
+    current = nextCurrent;
+    renderSpread();
+
     if (direction > 0) {
-      // Right page turns left: old right on the front, new left on the back.
+      // Next: old RIGHT page turns LEFT, revealing the already-painted next spread.
       setFlipPage(oldRight || oldLeft, newLeft);
       flipSheet.className = 'flip-sheet flip-next';
     } else {
-      // Left page turns right: old left on the front, new right on the back.
+      // Previous: old LEFT page turns RIGHT, revealing the already-painted previous spread.
       setFlipPage(oldLeft, newRight || newLeft);
       flipSheet.className = 'flip-sheet flip-prev';
     }
@@ -225,8 +226,7 @@
     busy = true;
 
     function finish() {
-      current = nextCurrent;
-      renderSpread();
+      // The destination spread is already visible underneath.
       flipSheet.className = 'flip-sheet';
       busy = false;
     }
