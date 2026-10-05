@@ -481,6 +481,9 @@ footer a {
   .where {
     margin-bottom: 32px;
   }
+  .snap {
+    padding-top: 50px;
+  }
 }
 @media (max-width: 520px) {
   body {
