@@ -230,6 +230,13 @@
       });
 
       flipSheet.className = 'flip-sheet';
+      // Clear the temporary turning-page images once the turn is complete.
+      // The finished spread is now the only source of truth for what is shown
+      // and what the page buttons open in the modal.
+      flipFrontImage.removeAttribute('src');
+      flipBackImage.removeAttribute('src');
+      flipFrontLabel.textContent = '';
+      flipBackLabel.textContent = '';
       busy = false;
     }
 
@@ -242,7 +249,7 @@
   function openModal(item) {
     if (!item) return;
     lastFocused = document.activeElement;
-    modalImage.src = item.url;
+    modalImage.src = item.loadedUrl || item.url;
     modalImage.alt = item.alt || item.title;
     modalTitle.textContent = item.title;
     modal.hidden = false;
