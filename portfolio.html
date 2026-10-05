@@ -12,146 +12,94 @@
   </head>
   <body>
     <a class="skip" href="#main">Skip to main content</a>
+
     <header>
       <div class="w">
         <a class="logo hand" href="index.html">Lauren Wilson</a>
         <nav aria-label="Main">
           <ul>
-            <li>
-              <a href="index.html">Bio</a>
-            </li>
-            <li>
-              <a href="experience.html">Experience</a>
-            </li>
-            <li>
-              <a href="portfolio.html" aria-current="page">Portfolio</a>
-            </li>
+            <li><a href="index.html">Bio</a></li>
+            <li><a href="experience.html">Experience</a></li>
+            <li><a href="portfolio.html" aria-current="page">Portfolio</a></li>
           </ul>
         </nav>
       </div>
     </header>
+
     <main id="main">
       <div class="w">
         <section class="intro">
-          <h1 id="h-port">
-            <span>Selected work</span>
-          </h1>
+          <h1 id="h-port"><span>Selected work</span></h1>
           <p class="lede">Projects from computer science, web development, creative coding, and digital art.</p>
         </section>
-        <section class="notebook-gallery" aria-label="Portfolio image gallery">
-          <div class="notebook-stage">
-            <button class="gallery-arrow prev" type="button" aria-label="Previous image">&#8592;</button>
 
-            <div class="notebook" id="portfolioGallery">
+        <section class="binder-gallery" aria-label="Portfolio image gallery">
+          <div class="binder-stage">
+            <button class="gallery-arrow prev" type="button" aria-label="Previous page">&#8592;</button>
+
+            <div class="binder" id="portfolioGallery" tabindex="0">
               <div class="spiral" aria-hidden="true">
-                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span>
               </div>
 
-              <div class="notebook-pages">
-                <div class="notebook-page page-left">
-                  <div class="photo-frame">
-                    <img id="galleryImage" src="img/portfolio-01.jpg" alt="Portfolio image 1">
-                  </div>
-                  <p class="page-label" id="galleryLabel">Portfolio image 1</p>
-                </div>
-                <div class="notebook-page page-right">
-                  <div class="page-lines" aria-hidden="true"></div>
-                  <p class="page-note" id="galleryNote">A closer look at Lauren's work.</p>
-                </div>
+              <div class="binder-spread">
+                <article class="binder-page binder-left">
+                  <button class="image-button" id="leftImageButton" type="button" aria-label="Open portfolio image">
+                    <span class="photo-frame">
+                      <img id="leftImage" src="" alt="">
+                    </span>
+                  </button>
+                  <p class="page-label" id="leftLabel"></p>
+                </article>
+
+                <article class="binder-page binder-right">
+                  <button class="image-button" id="rightImageButton" type="button" aria-label="Open portfolio image">
+                    <span class="photo-frame">
+                      <img id="rightImage" src="" alt="">
+                    </span>
+                  </button>
+                  <p class="page-label" id="rightLabel"></p>
+                </article>
               </div>
 
-              <div class="page-turn" aria-hidden="true">
-                <div class="page-turn-front"></div>
-                <div class="page-turn-back"></div>
+              <div class="flip-sheet" id="flipSheet" aria-hidden="true">
+                <div class="flip-face flip-front">
+                  <span class="photo-frame">
+                    <img id="flipFrontImage" src="" alt="">
+                  </span>
+                  <p class="page-label" id="flipFrontLabel"></p>
+                </div>
+                <div class="flip-face flip-back">
+                  <span class="photo-frame">
+                    <img id="flipBackImage" src="" alt="">
+                  </span>
+                  <p class="page-label" id="flipBackLabel"></p>
+                </div>
               </div>
             </div>
 
-            <button class="gallery-arrow next" type="button" aria-label="Next image">&#8594;</button>
+            <button class="gallery-arrow next" type="button" aria-label="Next page">&#8594;</button>
           </div>
 
           <div class="gallery-controls">
-            <div class="gallery-dots" id="galleryDots" role="tablist" aria-label="Choose portfolio image"></div>
-            <p class="gallery-hint">flip through the pages <span aria-hidden="true">↗</span></p>
+            <div class="gallery-dots" id="galleryDots" role="tablist" aria-label="Choose portfolio page"></div>
+            <p class="gallery-hint">turn the page <span aria-hidden="true">↗</span></p>
           </div>
-        </section>              </div>
-            </article>
-          </li>
-          <li>
-            <article class="card">
-              <svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">
-                <rect width="400" height="240" fill="#ffe36e" />
-                <rect x="60" y="30" width="280" height="180" rx="10" fill="#fff" stroke="#17325c" stroke-width="3" />
-                <path d="M60 40a10 10 0 0 1 10-10h260a10 10 0 0 1 10 10v22H60z" fill="#17325c" />
-                <circle cx="80" cy="46" r="5" fill="#ff8a7a" />
-                <circle cx="96" cy="46" r="5" fill="#ffe36e" />
-                <circle cx="112" cy="46" r="5" fill="#9fc2e8" />
-                <rect x="80" y="84" width="110" height="14" rx="3" fill="#17325c" />
-                <rect x="80" y="108" width="170" height="6" rx="3" fill="#b7c4d4" />
-                <rect x="80" y="122" width="140" height="6" rx="3" fill="#b7c4d4" />
-                <rect x="80" y="146" width="72" height="46" rx="4" fill="#9fc2e8" />
-                <rect x="164" y="146" width="72" height="46" rx="4" fill="#ff8a7a" />
-                <rect x="248" y="146" width="72" height="46" rx="4" fill="#40537a" />
-              </svg>
-              <div class="in">
-                <p class="cat">Web development, 2023</p>
-                <h3>Responsive Web Build</h3>
-                <p>A multi-page, accessible website built from scratch with semantic HTML and a focus on clean layout across screen sizes.</p>
-                <ul class="pills" aria-label="Skills">
-                  <li>HTML</li>
-                  <li>Web Development</li>
-                  <li>Accessibility</li>
-                </ul>
-              </div>
-            </article>
-          </li>
-          <li>
-            <article class="card">
-              <svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">
-                <rect width="400" height="240" fill="#9fc2e8" />
-                <g fill="#eaf0f4" stroke="#17325c" stroke-width="3">
-                  <rect x="150" y="30" width="100" height="42" rx="6" fill="#ff8a7a" />
-                  <rect x="50" y="150" width="90" height="42" rx="6" />
-                  <rect x="155" y="150" width="90" height="42" rx="6" />
-                  <rect x="260" y="150" width="90" height="42" rx="6" />
-                </g>
-                <path d="M200 72v38M95 150v-40h210v40M200 110v40" fill="none" stroke="#17325c" stroke-width="3" />
-              </svg>
-              <div class="in">
-                <p class="cat">Software design, 2022</p>
-                <h3>Object-Oriented Application</h3>
-                <p>A Java application designed around object-oriented principles, with an emphasis on clear class structure and reusable components.</p>
-                <ul class="pills" aria-label="Skills">
-                  <li>Java</li>
-                  <li>Object-Oriented Design</li>
-                  <li>Data Structures</li>
-                </ul>
-              </div>
-            </article>
-          </li>
-          <li>
-            <article class="card">
-              <svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">
-                <rect width="400" height="240" fill="#ff8a7a" />
-                <circle cx="290" cy="80" r="36" fill="#ffe36e" />
-                <path d="M0 200 120 80l70 70 50-40 160 90v40H0z" fill="#17325c" />
-                <path d="M0 240v-30l90-60 80 60 80-40 150 70v-0z" fill="#40537a" />
-                <path d="M0 240v-20l100-50 70 50 90-40 140 60v0z" fill="#eaf0f4" opacity="0" />
-              </svg>
-              <div class="in">
-                <p class="cat">Digital arts, 2023</p>
-                <h3>Digital Illustration &amp; Photo Editing</h3>
-                <p>A collection of digital artwork and image compositions created and retouched in Adobe Photoshop.</p>
-                <ul class="pills" aria-label="Skills">
-                  <li>Adobe Photoshop</li>
-                  <li>Digital Arts</li>
-                  <li>Visual Design</li>
-                </ul>
-              </div>
-            </article>
-          </li>
-        </ul>
+        </section>
       </div>
     </main>
+
+    <div class="image-modal" id="imageModal" hidden>
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button class="modal-close" id="modalClose" type="button" aria-label="Close enlarged image">&#215;</button>
+        <p class="modal-title hand" id="modalTitle">Portfolio image</p>
+        <img id="modalImage" src="" alt="">
+      </div>
+    </div>
+
     <footer>
       <div class="w">
         <span class="hand">Lauren Wilson</span>
@@ -159,6 +107,7 @@
         <a href="mailto:laurenwilsonlnw@gmail.com">laurenwilsonlnw@gmail.com</a>
       </div>
     </footer>
-      <script src="script.js"></script>
+
+    <script src="script.js"></script>
   </body>
 </html>
