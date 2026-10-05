@@ -859,6 +859,9 @@ footer a {
   .spiral span {
     width: 24px;
   }
+  .snap {
+    padding-top: 50px;
+  }
 }
 @media (max-width: 560px) {
   .notebook-gallery {
