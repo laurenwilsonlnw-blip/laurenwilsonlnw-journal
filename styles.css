@@ -153,6 +153,11 @@ h1:focus {
   position: relative;
   padding-bottom: 36px;
 }
+@media (max-width: 820px) {
+ .snap {
+   padding-top: 50px;
+ }
+}
 .polaroid {
   transform: rotate(3deg);
   position: relative;
