@@ -1561,3 +1561,19 @@ footer a {
     animation: binderFlipPrevCorrect .9s cubic-bezier(.18,.72,.2,1) forwards;
   }
 }
+
+
+/* Hide the physical flip sheet when it is not actively turning.
+   Without this, resetting its class after the animation leaves its front
+   face sitting on top of the finished spread and makes the right image
+   appear to change. */
+.flip-sheet {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.flip-sheet.flip-next,
+.flip-sheet.flip-prev {
+  visibility: visible;
+  opacity: 1;
+}
