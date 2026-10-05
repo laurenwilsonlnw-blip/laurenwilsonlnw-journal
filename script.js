@@ -39,21 +39,37 @@
     }
   }
 
-  /* Spiral notebook portfolio gallery */
+  /* Spiral binder portfolio gallery */
   var gallery = document.getElementById('portfolioGallery');
   if (!gallery) return;
 
-  var image = document.getElementById('galleryImage');
-  var label = document.getElementById('galleryLabel');
-  var note = document.getElementById('galleryNote');
+  var leftImage = document.getElementById('leftImage');
+  var rightImage = document.getElementById('rightImage');
+  var leftLabel = document.getElementById('leftLabel');
+  var rightLabel = document.getElementById('rightLabel');
+  var flipSheet = document.getElementById('flipSheet');
+  var flipFrontImage = document.getElementById('flipFrontImage');
+  var flipBackImage = document.getElementById('flipBackImage');
+  var flipFrontLabel = document.getElementById('flipFrontLabel');
+  var flipBackLabel = document.getElementById('flipBackLabel');
   var dots = document.getElementById('galleryDots');
   var prev = document.querySelector('.gallery-arrow.prev');
   var next = document.querySelector('.gallery-arrow.next');
-  var turn = gallery.querySelector('.page-turn');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  var current = 0;
+
+  var modal = document.getElementById('imageModal');
+  var modalImage = document.getElementById('modalImage');
+  var modalTitle = document.getElementById('modalTitle');
+  var modalClose = document.getElementById('modalClose');
+
   var images = [];
+  var current = 0;
   var busy = false;
+  var lastFocused = null;
+
+  function mod(value, length) {
+    return ((value % length) + length) % length;
+  }
 
   function titleFromFile(name) {
     return name
@@ -62,24 +78,37 @@
       .replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
   }
 
-  function show(index, animate) {
-    if (!images.length) return;
-    current = (index + images.length) % images.length;
+  function imageItem(index) {
+    if (!images.length) return null;
+    return images[mod(index, images.length)];
+  }
 
-    if (animate && !reduceMotion.matches) {
-      turn.classList.remove('flipping');
-      void turn.offsetWidth;
-      turn.classList.add('flipping');
-    }
+  function paintImage(img, item) {
+    if (!item) return;
+    img.src = item.url;
+    img.alt = item.alt || item.title;
+  }
 
-    image.src = images[current].url;
-    image.alt = images[current].alt || titleFromFile(images[current].name);
-    label.textContent = images[current].title;
-    note.textContent = images[current].note || 'A closer look at Lauren\'s work.';
+  function renderSpread() {
+    var left = imageItem(current);
+    var right = imageItem(current + 1);
+
+    paintImage(leftImage, left);
+    paintImage(rightImage, right);
+
+    leftLabel.textContent = left ? left.title : '';
+    rightLabel.textContent = right ? right.title : '';
 
     Array.prototype.forEach.call(dots.children, function (dot, i) {
       dot.setAttribute('aria-selected', String(i === current));
     });
+  }
+
+  function setFlipPage(frontItem, backItem) {
+    paintImage(flipFrontImage, frontItem);
+    paintImage(flipBackImage, backItem);
+    flipFrontLabel.textContent = frontItem ? frontItem.title : '';
+    flipBackLabel.textContent = backItem ? backItem.title : '';
   }
 
   function buildDots() {
@@ -89,28 +118,120 @@
       dot.className = 'gallery-dot';
       dot.type = 'button';
       dot.setAttribute('role', 'tab');
-      dot.setAttribute('aria-label', 'Show ' + item.title);
-      dot.setAttribute('aria-selected', String(i === 0));
-      dot.addEventListener('click', function () { show(i, true); });
+      dot.setAttribute('aria-label', 'Open ' + item.title);
+      dot.setAttribute('aria-selected', String(i === current));
+      dot.addEventListener('click', function () {
+        if (busy || i === current || !images.length) return;
+        current = i;
+        renderSpread();
+      });
       dots.appendChild(dot);
     });
   }
 
+  function move(direction) {
+    if (busy || !images.length) return;
+
+    if (images.length === 1) {
+      openModal(images[0]);
+      return;
+    }
+
+    var frontIndex;
+    var backIndex;
+
+    if (direction > 0) {
+      frontIndex = current + 1;
+      backIndex = current + 2;
+      flipSheet.className = 'flip-sheet';
+      setFlipPage(imageItem(frontIndex), imageItem(backIndex));
+      void flipSheet.offsetWidth;
+      flipSheet.classList.add('flip-next');
+    } else {
+      frontIndex = current;
+      backIndex = current - 1;
+      flipSheet.className = 'flip-sheet flip-prev';
+      setFlipPage(imageItem(frontIndex), imageItem(backIndex));
+      void flipSheet.offsetWidth;
+      flipSheet.classList.add('flip-prev');
+    }
+
+    busy = true;
+
+    var finish = function () {
+      current = mod(current + direction, images.length);
+      renderSpread();
+      flipSheet.className = 'flip-sheet';
+      busy = false;
+    };
+
+    if (reduceMotion.matches) {
+      finish();
+    } else {
+      window.setTimeout(finish, 920);
+    }
+  }
+
+  function openModal(item) {
+    if (!item) return;
+
+    lastFocused = document.activeElement;
+    modalImage.src = item.url;
+    modalImage.alt = item.alt || item.title;
+    modalTitle.textContent = item.title;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    modalClose.focus();
+  }
+
+  function closeModal() {
+    modal.hidden = true;
+    modalImage.removeAttribute('src');
+    document.body.style.overflow = '';
+    if (lastFocused && typeof lastFocused.focus === 'function') {
+      lastFocused.focus();
+    }
+  }
+
+  document.getElementById('leftImageButton').addEventListener('click', function () {
+    openModal(imageItem(current));
+  });
+
+  document.getElementById('rightImageButton').addEventListener('click', function () {
+    openModal(imageItem(current + 1));
+  });
+
+  modalClose.addEventListener('click', closeModal);
+  modal.querySelector('[data-close-modal]').addEventListener('click', closeModal);
+
+  document.addEventListener('keydown', function (event) {
+    if (!modal.hidden && event.key === 'Escape') {
+      event.preventDefault();
+      closeModal();
+      return;
+    }
+
+    if (!modal.hidden) return;
+
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      move(-1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      move(1);
+    }
+  });
+
   function fallback() {
-    images = [{
-      url: 'img/portfolio-01.jpg',
-      name: 'portfolio image',
-      title: 'Portfolio',
-      note: 'Add your portfolio images to the img folder to fill the notebook.'
-    }];
-    buildDots();
-    show(0, false);
-    image.addEventListener('error', function () {
-      image.removeAttribute('src');
-      image.alt = 'Portfolio images will appear here';
-      label.textContent = 'Your work goes here';
-      note.textContent = 'Add image files to the img folder and they will appear in this notebook.';
-    }, { once: true });
+    images = [];
+    dots.innerHTML = '';
+    leftLabel.textContent = 'Add portfolio images';
+    rightLabel.textContent = 'Add portfolio images';
+    leftImage.removeAttribute('src');
+    rightImage.removeAttribute('src');
+    leftImage.alt = 'Add portfolio images to the img folder';
+    rightImage.alt = 'Add portfolio images to the img folder';
+    flipSheet.className = 'flip-sheet';
   }
 
   fetch('https://api.github.com/repos/laurenwilsonlnw-blip/laurenwilsonlnw-journal/contents/img')
@@ -120,13 +241,15 @@
     })
     .then(function (files) {
       images = files
-        .filter(function (file) { return file.type === 'file' && /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(file.name); })
+        .filter(function (file) {
+          return file.type === 'file' && /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(file.name);
+        })
         .map(function (file) {
           return {
             url: file.download_url,
             name: file.name,
             title: titleFromFile(file.name),
-            note: 'A closer look at Lauren\'s work.'
+            alt: titleFromFile(file.name)
           };
         });
 
@@ -135,38 +258,19 @@
         return;
       }
 
+      current = 0;
       buildDots();
-      show(0, false);
+      renderSpread();
     })
     .catch(fallback);
-
-  function move(direction) {
-    if (busy || !images.length) return;
-    busy = true;
-    show(current + direction, true);
-    setTimeout(function () {
-      busy = false;
-      turn.classList.remove('flipping');
-    }, reduceMotion.matches ? 0 : 850);
-  }
 
   prev.addEventListener('click', function () { move(-1); });
   next.addEventListener('click', function () { move(1); });
 
-  gallery.addEventListener('keydown', function (event) {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      move(-1);
-    }
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      move(1);
-    }
+  /* Keep the visible page images crisp and uncropped. */
+  [leftImage, rightImage, flipFrontImage, flipBackImage].forEach(function (img) {
+    img.addEventListener('error', function () {
+      img.alt = 'Portfolio image could not be loaded';
+    });
   });
-
-  image.addEventListener('load', function () {
-    image.style.opacity = '1';
-  });
-
-  image.style.opacity = '1';
 })();
