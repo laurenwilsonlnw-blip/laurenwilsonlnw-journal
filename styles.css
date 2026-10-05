@@ -1505,3 +1505,59 @@ footer a {
     transform-origin: right center;
   }
 }
+
+
+/* Correct physical binder directions:
+   Next = right page turns left.
+   Previous = left page turns right. */
+.flip-sheet {
+  left: 50%;
+  width: 50%;
+  transform-origin: left center;
+}
+
+.flip-sheet.flip-next {
+  left: 50%;
+  width: 50%;
+  transform-origin: left center;
+  animation: binderFlipNextCorrect .9s cubic-bezier(.18,.72,.2,1) forwards;
+}
+
+.flip-sheet.flip-prev {
+  left: 0;
+  width: 50%;
+  transform-origin: right center;
+  animation: binderFlipPrevCorrect .9s cubic-bezier(.18,.72,.2,1) forwards;
+}
+
+@keyframes binderFlipNextCorrect {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(-180deg); }
+}
+
+@keyframes binderFlipPrevCorrect {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(180deg); }
+}
+
+@media (max-width: 620px) {
+  .flip-sheet {
+    left: 0;
+    width: 100%;
+    transform-origin: left center;
+  }
+
+  .flip-sheet.flip-next {
+    left: 0;
+    width: 100%;
+    transform-origin: left center;
+    animation: binderFlipNextCorrect .9s cubic-bezier(.18,.72,.2,1) forwards;
+  }
+
+  .flip-sheet.flip-prev {
+    left: 0;
+    width: 100%;
+    transform-origin: right center;
+    animation: binderFlipPrevCorrect .9s cubic-bezier(.18,.72,.2,1) forwards;
+  }
+}
