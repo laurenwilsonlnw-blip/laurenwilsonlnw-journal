@@ -56,6 +56,7 @@
   var prev = document.querySelector('.gallery-arrow.prev');
   var next = document.querySelector('.gallery-arrow.next');
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var mobileQuery = window.matchMedia('(max-width: 620px)');
 
   var modal = document.getElementById('imageModal');
   var modalImage = document.getElementById('modalImage');
@@ -66,6 +67,10 @@
   var current = 0;
   var busy = false;
   var lastFocused = null;
+
+  function isMobile() {
+    return mobileQuery.matches;
+  }
 
   function mod(value, length) {
     return ((value % length) + length) % length;
@@ -84,14 +89,18 @@
   }
 
   function paintImage(img, item) {
-    if (!item) return;
+    if (!item) {
+      img.removeAttribute('src');
+      img.alt = '';
+      return;
+    }
     img.src = item.url;
     img.alt = item.alt || item.title;
   }
 
   function renderSpread() {
     var left = imageItem(current);
-    var right = imageItem(current + 1);
+    var right = imageItem(isMobile() ? current : current + 1);
 
     paintImage(leftImage, left);
     paintImage(rightImage, right);
@@ -100,7 +109,10 @@
     rightLabel.textContent = right ? right.title : '';
 
     Array.prototype.forEach.call(dots.children, function (dot, i) {
-      dot.setAttribute('aria-selected', String(i === current));
+      var selected = isMobile()
+        ? i === current
+        : i === Math.floor(current / 2);
+      dot.setAttribute('aria-selected', String(selected));
     });
   }
 
@@ -113,57 +125,61 @@
 
   function buildDots() {
     dots.innerHTML = '';
-    images.forEach(function (item, i) {
+    var count = isMobile() ? images.length : Math.ceil(images.length / 2);
+
+    for (var i = 0; i < count; i++) {
       var dot = document.createElement('button');
+      var target = isMobile() ? i : i * 2;
       dot.className = 'gallery-dot';
       dot.type = 'button';
       dot.setAttribute('role', 'tab');
-      dot.setAttribute('aria-label', 'Open ' + item.title);
-      dot.setAttribute('aria-selected', String(i === current));
-      dot.addEventListener('click', function () {
-        if (busy || i === current || !images.length) return;
-        current = i;
+      dot.setAttribute('aria-label', 'Open page ' + (i + 1));
+      dot.setAttribute('aria-selected', String(target === current));
+      dot.addEventListener('click', function (event) {
+        if (busy) return;
+        var targetIndex = Number(event.currentTarget.dataset.index);
+        current = targetIndex;
         renderSpread();
       });
+      dot.dataset.index = String(target);
       dots.appendChild(dot);
-    });
+    }
   }
 
   function move(direction) {
     if (busy || !images.length) return;
 
-    if (images.length === 1) {
-      openModal(images[0]);
-      return;
+    var step = isMobile() ? 1 : 2;
+    var nextCurrent = mod(current + direction * step, images.length);
+
+    /* A two-page desktop spread always contains two different images.
+       On mobile, the binder becomes a single-page reader. */
+    if (isMobile()) {
+      setFlipPage(imageItem(current), imageItem(nextCurrent));
+      flipSheet.className = 'flip-sheet';
+    } else if (direction > 0) {
+      setFlipPage(imageItem(current + 1), imageItem(current + 2));
+      flipSheet.className = 'flip-sheet';
+    } else {
+      setFlipPage(imageItem(current), imageItem(current - 1));
+      flipSheet.className = 'flip-sheet flip-prev';
     }
 
-    var frontIndex;
-    var backIndex;
+    void flipSheet.offsetWidth;
+    busy = true;
 
     if (direction > 0) {
-      frontIndex = current + 1;
-      backIndex = current + 2;
-      flipSheet.className = 'flip-sheet';
-      setFlipPage(imageItem(frontIndex), imageItem(backIndex));
-      void flipSheet.offsetWidth;
       flipSheet.classList.add('flip-next');
     } else {
-      frontIndex = current;
-      backIndex = current - 1;
-      flipSheet.className = 'flip-sheet flip-prev';
-      setFlipPage(imageItem(frontIndex), imageItem(backIndex));
-      void flipSheet.offsetWidth;
       flipSheet.classList.add('flip-prev');
     }
 
-    busy = true;
-
-    var finish = function () {
-      current = mod(current + direction, images.length);
+    function finish() {
+      current = nextCurrent;
       renderSpread();
       flipSheet.className = 'flip-sheet';
       busy = false;
-    };
+    }
 
     if (reduceMotion.matches) {
       finish();
@@ -174,7 +190,6 @@
 
   function openModal(item) {
     if (!item) return;
-
     lastFocused = document.activeElement;
     modalImage.src = item.url;
     modalImage.alt = item.alt || item.title;
@@ -198,7 +213,7 @@
   });
 
   document.getElementById('rightImageButton').addEventListener('click', function () {
-    openModal(imageItem(current + 1));
+    openModal(imageItem(isMobile() ? current : current + 1));
   });
 
   modalClose.addEventListener('click', closeModal);
@@ -234,40 +249,52 @@
     flipSheet.className = 'flip-sheet';
   }
 
+  function loadImages(files) {
+    images = files
+      .filter(function (file) {
+        return file.type === 'file' && /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(file.name);
+      })
+      .sort(function (a, b) {
+        return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+      })
+      .map(function (file) {
+        return {
+          url: file.download_url,
+          name: file.name,
+          title: titleFromFile(file.name),
+          alt: titleFromFile(file.name)
+        };
+      });
+
+    if (!images.length) {
+      fallback();
+      return;
+    }
+
+    current = 0;
+    buildDots();
+    renderSpread();
+  }
+
   fetch('https://api.github.com/repos/laurenwilsonlnw-blip/laurenwilsonlnw-journal/contents/img')
     .then(function (response) {
       if (!response.ok) throw new Error('Image folder unavailable');
       return response.json();
     })
-    .then(function (files) {
-      images = files
-        .filter(function (file) {
-          return file.type === 'file' && /\.(jpe?g|png|gif|webp|avif|svg)$/i.test(file.name);
-        })
-        .map(function (file) {
-          return {
-            url: file.download_url,
-            name: file.name,
-            title: titleFromFile(file.name),
-            alt: titleFromFile(file.name)
-          };
-        });
-
-      if (!images.length) {
-        fallback();
-        return;
-      }
-
-      current = 0;
-      buildDots();
-      renderSpread();
-    })
+    .then(loadImages)
     .catch(fallback);
 
   prev.addEventListener('click', function () { move(-1); });
   next.addEventListener('click', function () { move(1); });
 
-  /* Keep the visible page images crisp and uncropped. */
+  mobileQuery.addEventListener('change', function () {
+    if (!images.length || busy) return;
+    current = isMobile() ? mod(current, images.length) : mod(current - (current % 2), images.length);
+    flipSheet.className = 'flip-sheet';
+    buildDots();
+    renderSpread();
+  });
+
   [leftImage, rightImage, flipFrontImage, flipBackImage].forEach(function (img) {
     img.addEventListener('error', function () {
       img.alt = 'Portfolio image could not be loaded';
