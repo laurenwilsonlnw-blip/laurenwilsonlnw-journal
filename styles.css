@@ -1577,3 +1577,21 @@ footer a {
   visibility: visible;
   opacity: 1;
 }
+
+
+/* The turning sheet must be removed from the visual stack as soon as the
+   animation ends. Otherwise its old front face can remain over the finished
+   spread even though pointer-events are disabled, making the photo look
+   wrong while the button underneath opens the correct image. */
+.flip-sheet {
+  display: none;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.flip-sheet.flip-next,
+.flip-sheet.flip-prev {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
