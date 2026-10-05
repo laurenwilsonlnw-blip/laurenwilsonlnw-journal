@@ -97,11 +97,14 @@
   function paintImage(img, item) {
     if (!item) {
       img.removeAttribute('src');
+      img.removeAttribute('data-fallback-used');
       img.alt = '';
       return;
     }
-    img.src = item.url;
+
+    img.removeAttribute('data-fallback-used');
     img.alt = item.alt || item.title;
+    img.src = item.url;
   }
 
   function renderSpread() {
@@ -155,28 +158,36 @@
   function move(direction) {
     if (busy || !images.length) return;
 
+    var oldCurrent = current;
     var step = isMobile() ? 1 : 2;
     var nextCurrent;
+
     if (isMobile()) {
       nextCurrent = mod(current + direction, images.length);
     } else {
       nextCurrent = current + direction * step;
       if (nextCurrent >= images.length) nextCurrent = 0;
-      if (nextCurrent < 0) nextCurrent = Math.max(0, images.length - 1 - ((images.length - 1) % 2));
+      if (nextCurrent < 0) {
+        nextCurrent = Math.max(0, images.length - 1 - ((images.length - 1) % 2));
+      }
     }
 
-    /* A two-page desktop spread always contains two different images.
-       On mobile, the binder becomes a single-page reader. */
+    /* Set up the sheet with the page that is physically being turned.
+       The new spread is rendered underneath it before the animation starts,
+       so the previous button changes the spread immediately and reliably. */
     if (isMobile()) {
-      setFlipPage(mobileImageItem(current), mobileImageItem(nextCurrent));
+      setFlipPage(mobileImageItem(oldCurrent), mobileImageItem(nextCurrent));
       flipSheet.className = 'flip-sheet';
     } else if (direction > 0) {
-      setFlipPage(imageItem(current + 1), imageItem(current + 2));
+      setFlipPage(imageItem(oldCurrent + 1), imageItem(nextCurrent));
       flipSheet.className = 'flip-sheet';
     } else {
-      setFlipPage(imageItem(current), imageItem(current - 1));
+      setFlipPage(imageItem(oldCurrent), imageItem(nextCurrent + 1));
       flipSheet.className = 'flip-sheet flip-prev';
     }
+
+    current = nextCurrent;
+    renderSpread();
 
     void flipSheet.offsetWidth;
     busy = true;
@@ -188,8 +199,6 @@
     }
 
     function finish() {
-      current = nextCurrent;
-      renderSpread();
       flipSheet.className = 'flip-sheet';
       busy = false;
     }
@@ -275,7 +284,8 @@
           url: file.download_url,
           name: file.name,
           title: titleFromFile(file.name),
-          alt: titleFromFile(file.name)
+          alt: titleFromFile(file.name),
+          fallbackUrl: 'https://cdn.jsdelivr.net/gh/laurenwilsonlnw-blip/laurenwilsonlnw-journal@main/img/' + encodeURIComponent(file.name)
         };
       });
 
@@ -310,6 +320,20 @@
 
   [leftImage, rightImage, flipFrontImage, flipBackImage].forEach(function (img) {
     img.addEventListener('error', function () {
+      var item = null;
+      for (var i = 0; i < images.length; i++) {
+        if (images[i].url === img.src || images[i].fallbackUrl === img.src) {
+          item = images[i];
+          break;
+        }
+      }
+
+      if (item && item.fallbackUrl && !img.hasAttribute('data-fallback-used')) {
+        img.setAttribute('data-fallback-used', 'true');
+        img.src = item.fallbackUrl;
+        return;
+      }
+
       img.alt = 'Portfolio image could not be loaded';
     });
   });
