@@ -163,10 +163,6 @@
     var step = isMobile() ? 1 : 2;
     var nextCurrent;
 
-    /*
-      Desktop navigation always moves by a complete two-image spread.
-      Mobile moves one image at a time.
-    */
     if (!isMobile() && current % 2 !== 0) {
       current = current - 1;
     }
@@ -186,11 +182,23 @@
     }
 
     /*
-      IMPORTANT:
-      Paint the destination spread FIRST, then put the old page on the
-      physical flip sheet. This means the new images are already underneath
-      the turning page when the animation begins, instead of appearing only
-      after the animation finishes.
+      The images are preloaded, so the destination can be revealed during
+      the physical page turn without waiting for a network request.
+
+      NEXT:
+        - Put the destination RIGHT image underneath first.
+        - The old RIGHT page is the front of the turning sheet.
+        - The destination LEFT image is the back of that sheet.
+        - As the sheet turns left, it reveals the new two-image spread.
+
+      PREVIOUS:
+        - Put the destination LEFT image underneath first.
+        - The old LEFT page is the front of the turning sheet.
+        - The destination RIGHT image is the back.
+        - As the sheet turns right, it reveals the previous two-image spread.
+
+      The final render is only a synchronization step after the animation;
+      the images have already been loaded and visually revealed.
     */
     var oldLeft = isMobile()
       ? mobileImageItem(current)
@@ -208,25 +216,35 @@
       ? null
       : imageItem(nextCurrent + 1);
 
-    // Switch the visible spread BEFORE starting the animation.
-    current = nextCurrent;
-    renderSpread();
-
-    if (direction > 0) {
-      // Next: old RIGHT page turns LEFT, revealing the already-painted next spread.
-      setFlipPage(oldRight || oldLeft, newLeft);
-      flipSheet.className = 'flip-sheet flip-next';
-    } else {
-      // Previous: old LEFT page turns RIGHT, revealing the already-painted previous spread.
-      setFlipPage(oldLeft, newRight || newLeft);
-      flipSheet.className = 'flip-sheet flip-prev';
-    }
-
-    void flipSheet.offsetWidth;
     busy = true;
 
+    if (direction > 0) {
+      // Next: prepare the destination right page underneath the turn.
+      paintImage(rightImage, newRight || newLeft);
+      rightLabel.textContent = (newRight || newLeft) ? (newRight || newLeft).title : '';
+      rightImageButton.dataset.imageIndex = String(
+        isMobile() ? nextCurrent : (newRight ? nextCurrent + 1 : nextCurrent)
+      );
+
+      setFlipPage(oldRight || oldLeft, newLeft);
+      flipSheet.className = 'flip-sheet';
+      void flipSheet.offsetWidth;
+      flipSheet.classList.add('flip-next');
+    } else {
+      // Previous: prepare the destination left page underneath the turn.
+      paintImage(leftImage, newLeft);
+      leftLabel.textContent = newLeft ? newLeft.title : '';
+      leftImageButton.dataset.imageIndex = String(nextCurrent);
+
+      setFlipPage(oldLeft, newRight || newLeft);
+      flipSheet.className = 'flip-sheet';
+      void flipSheet.offsetWidth;
+      flipSheet.classList.add('flip-prev');
+    }
+
     function finish() {
-      // The destination spread is already visible underneath.
+      current = nextCurrent;
+      renderSpread();
       flipSheet.className = 'flip-sheet';
       busy = false;
     }
