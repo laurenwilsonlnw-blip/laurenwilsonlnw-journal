@@ -102,7 +102,7 @@
     }
 
     img.alt = item.alt || item.title;
-    img.src = item.url;
+    img.src = item.loadedUrl || item.url;
   }
 
   function renderSpread() {
@@ -181,61 +181,38 @@
       }
     }
 
+    var oldLeft = isMobile() ? mobileImageItem(current) : imageItem(current);
+    var oldRight = isMobile() ? null : imageItem(current + 1);
+    var newLeft = isMobile() ? mobileImageItem(nextCurrent) : imageItem(nextCurrent);
+    var newRight = isMobile() ? null : imageItem(nextCurrent + 1);
+
     /*
-      The images are preloaded, so the destination can be revealed during
-      the physical page turn without waiting for a network request.
+      Both destination images are already preloaded. Put the COMPLETE
+      destination spread underneath the turning sheet BEFORE the animation.
+      The sheet itself is the only old page that moves.
 
-      NEXT:
-        - Put the destination RIGHT image underneath first.
-        - The old RIGHT page is the front of the turning sheet.
-        - The destination LEFT image is the back of that sheet.
-        - As the sheet turns left, it reveals the new two-image spread.
-
-      PREVIOUS:
-        - Put the destination LEFT image underneath first.
-        - The old LEFT page is the front of the turning sheet.
-        - The destination RIGHT image is the back.
-        - As the sheet turns right, it reveals the previous two-image spread.
-
-      The final render is only a synchronization step after the animation;
-      the images have already been loaded and visually revealed.
+      This prevents the post-animation flash: finish() never re-renders the
+      images, it only records the new spread.
     */
-    var oldLeft = isMobile()
-      ? mobileImageItem(current)
-      : imageItem(current);
-
-    var oldRight = isMobile()
-      ? null
-      : imageItem(current + 1);
-
-    var newLeft = isMobile()
-      ? mobileImageItem(nextCurrent)
-      : imageItem(nextCurrent);
-
-    var newRight = isMobile()
-      ? null
-      : imageItem(nextCurrent + 1);
-
     busy = true;
 
-    if (direction > 0) {
-      // Next: prepare the destination right page underneath the turn.
-      paintImage(rightImage, newRight || newLeft);
-      rightLabel.textContent = (newRight || newLeft) ? (newRight || newLeft).title : '';
-      rightImageButton.dataset.imageIndex = String(
-        isMobile() ? nextCurrent : (newRight ? nextCurrent + 1 : nextCurrent)
-      );
+    paintImage(leftImage, newLeft);
+    paintImage(rightImage, newRight || newLeft);
+    leftLabel.textContent = newLeft ? newLeft.title : '';
+    rightLabel.textContent = (newRight || newLeft) ? (newRight || newLeft).title : '';
+    leftImageButton.dataset.imageIndex = String(nextCurrent);
+    rightImageButton.dataset.imageIndex = String(
+      isMobile() ? nextCurrent : (newRight ? nextCurrent + 1 : nextCurrent)
+    );
 
+    if (direction > 0) {
+      // Right page turns left and reveals the destination spread.
       setFlipPage(oldRight || oldLeft, newLeft);
       flipSheet.className = 'flip-sheet';
       void flipSheet.offsetWidth;
       flipSheet.classList.add('flip-next');
     } else {
-      // Previous: prepare the destination left page underneath the turn.
-      paintImage(leftImage, newLeft);
-      leftLabel.textContent = newLeft ? newLeft.title : '';
-      leftImageButton.dataset.imageIndex = String(nextCurrent);
-
+      // Left page turns right and reveals the destination spread.
       setFlipPage(oldLeft, newRight || newLeft);
       flipSheet.className = 'flip-sheet';
       void flipSheet.offsetWidth;
@@ -244,7 +221,14 @@
 
     function finish() {
       current = nextCurrent;
-      renderSpread();
+
+      Array.prototype.forEach.call(dots.children, function (dot, i) {
+        var selected = isMobile()
+          ? i === current
+          : i === Math.floor(current / 2);
+        dot.setAttribute('aria-selected', String(selected));
+      });
+
       flipSheet.className = 'flip-sheet';
       busy = false;
     }
@@ -328,12 +312,14 @@
       })
       .map(function (file) {
         return {
-          url: 'https://raw.githubusercontent.com/laurenwilsonlnw-blip/laurenwilsonlnw-journal/main/img/' + encodeURIComponent(file.name),
+          url: file.download_url,
+          fallbackUrl: 'https://raw.githubusercontent.com/laurenwilsonlnw-blip/laurenwilsonlnw-journal/main/img/' + encodeURIComponent(file.name),
           name: file.name,
           title: titleFromFile(file.name),
-          alt: titleFromFile(file.name)
+          alt: titleFromFile(file.name),
+          loadedUrl: ''
         };
-      });
+      });;
 
     if (!images.length) {
       fallback();
@@ -344,15 +330,39 @@
     buildDots();
 
     /*
-      Preload every portfolio image before the binder is first painted.
-      This makes the initial spread reliable and prevents a page from
-      appearing blank while the browser is still fetching the image.
+      Preload and verify every image before the first spread is painted.
+      If GitHub's download URL fails, try the raw GitHub URL. The gallery
+      does not render until the first two images have known working URLs.
     */
     var preloadPromises = images.map(function (item) {
       return new Promise(function (resolve) {
         var preloader = new Image();
-        preloader.onload = resolve;
-        preloader.onerror = resolve;
+
+        preloader.onload = function () {
+          item.loadedUrl = item.url;
+          resolve();
+        };
+
+        preloader.onerror = function () {
+          if (item.loadedUrl === item.fallbackUrl) {
+            resolve();
+            return;
+          }
+
+          var fallbackPreloader = new Image();
+
+          fallbackPreloader.onload = function () {
+            item.loadedUrl = item.fallbackUrl;
+            resolve();
+          };
+
+          fallbackPreloader.onerror = function () {
+            resolve();
+          };
+
+          fallbackPreloader.src = item.fallbackUrl;
+        };
+
         preloader.src = item.url;
       });
     });
