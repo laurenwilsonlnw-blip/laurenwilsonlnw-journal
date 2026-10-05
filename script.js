@@ -85,6 +85,12 @@
 
   function imageItem(index) {
     if (!images.length) return null;
+    if (index < 0 || index >= images.length) return null;
+    return images[index];
+  }
+
+  function mobileImageItem(index) {
+    if (!images.length) return null;
     return images[mod(index, images.length)];
   }
 
@@ -99,8 +105,8 @@
   }
 
   function renderSpread() {
-    var left = imageItem(current);
-    var right = imageItem(isMobile() ? current : current + 1);
+    var left = mobileImageItem(current);
+    var right = isMobile() ? left : imageItem(current + 1);
 
     paintImage(leftImage, left);
     paintImage(rightImage, right);
@@ -150,12 +156,19 @@
     if (busy || !images.length) return;
 
     var step = isMobile() ? 1 : 2;
-    var nextCurrent = mod(current + direction * step, images.length);
+    var nextCurrent;
+    if (isMobile()) {
+      nextCurrent = mod(current + direction, images.length);
+    } else {
+      nextCurrent = current + direction * step;
+      if (nextCurrent >= images.length) nextCurrent = 0;
+      if (nextCurrent < 0) nextCurrent = Math.max(0, images.length - 1 - ((images.length - 1) % 2));
+    }
 
     /* A two-page desktop spread always contains two different images.
        On mobile, the binder becomes a single-page reader. */
     if (isMobile()) {
-      setFlipPage(imageItem(current), imageItem(nextCurrent));
+      setFlipPage(mobileImageItem(current), mobileImageItem(nextCurrent));
       flipSheet.className = 'flip-sheet';
     } else if (direction > 0) {
       setFlipPage(imageItem(current + 1), imageItem(current + 2));
@@ -209,11 +222,11 @@
   }
 
   document.getElementById('leftImageButton').addEventListener('click', function () {
-    openModal(imageItem(current));
+    openModal(mobileImageItem(current));
   });
 
   document.getElementById('rightImageButton').addEventListener('click', function () {
-    openModal(imageItem(isMobile() ? current : current + 1));
+    openModal(isMobile() ? mobileImageItem(current) : imageItem(current + 1));
   });
 
   modalClose.addEventListener('click', closeModal);
